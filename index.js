@@ -74,6 +74,15 @@ const observe = (object, callback, options = {}) => {
     return target;
   };
 
+  const ignoreProperty = property => {
+    return (
+      unobserved ||
+      (options.ignoreSymbols === true && isSymbol(property)) ||
+      (options.ignoreUnderscores === true && property.charAt(0) === '_') ||
+      (options.ignoreKeys !== undefined && options.ignoreKeys.includes(property))
+    );
+  };
+
   const handler = {
     get: (target, property, receiver) => {
       if (property === PROXYTARGET) {
@@ -88,7 +97,13 @@ const observe = (object, callback, options = {}) => {
         return unobserve(target);
       }
       const value = Reflect.get(target, property, receiver);
-      if (isPrimitive(value) || isBuiltinWithoutMutableMethods(value) || property === 'constructor') {
+      if (
+        isPrimitive(value) ||
+        isBuiltinWithoutMutableMethods(value) ||
+        property === 'constructor' ||
+        options.isShallow === true ||
+        ignoreProperty(property)
+      ) {
         return value;
       }
       const descriptor = Reflect.getOwnPropertyDescriptor(target, property);
@@ -114,7 +129,7 @@ const observe = (object, callback, options = {}) => {
         descriptor.set.call(receiver, value);
       } else if (isChanged) {
         result = Reflect.set(target[ProxyTarget] || target, property, value);
-        if (result) {
+        if (result && !ignoreProperty(property)) {
           handleChange(pathCache.get(target), property, previous, value);
         }
       }
@@ -124,7 +139,7 @@ const observe = (object, callback, options = {}) => {
       let result = true;
       if (!isSameDescriptor(descriptor, Reflect.getOwnPropertyDescriptor(target, property))) {
         result = Reflect.defineProperty(target, property, descriptor);
-        if (result) {
+        if (result && !ignoreProperty(property)) {
           handleChange(pathCache.get(target), property, undefined, descriptor.value);
         }
       }
@@ -136,7 +151,7 @@ const observe = (object, callback, options = {}) => {
       }
       const previous = Reflect.get(target, property);
       const result = Reflect.deleteProperty(target, property);
-      if (result) {
+      if (result && !ignoreProperty(property)) {
         handleChange(pathCache.get(target), property, previous, undefined);
       }
       return result;

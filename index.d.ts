@@ -1,6 +1,10 @@
 declare namespace observer {
   interface Options {
+    isShallow?: boolean;
     equals?: (a: unknown, b: unknown) => boolean;
+    ignoreSymbols?: boolean;
+    ignoreUnderscores?: boolean;
+    ignoreKeys?: Array<string | symbol>;
   }
 }
 
