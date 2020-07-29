@@ -1,7 +1,7 @@
 {
   "name": "@tarocch1/observer",
   "version": "0.0.1",
-  "description": "A state manager for React Hooks.",
+  "description": "An observer for object and array.",
   "license": "MIT",
   "author": "Tarocch1 <huiben.fang@gmail.com> (https://github.com/Tarocch1)",
   "homepage": "https://github.com/Tarocch1/observer",
