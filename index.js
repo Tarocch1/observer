@@ -8,6 +8,8 @@ const observe = (object, callback, options = {}) => {
 
   let inApply = false;
   let changed = false;
+  let applyPath;
+  let applyPrevious;
 
   const isPrimitive = value => value === null || (typeof value !== 'object' && typeof value !== 'function');
   const isBuiltinWithoutMutableMethods = value => value instanceof RegExp || value instanceof Number;
@@ -28,6 +30,22 @@ const observe = (object, callback, options = {}) => {
       callback(property ? changePath.concat([property]) : changePath, previous, value);
       return;
     }
+
+    if (inApply && applyPrevious && previous !== undefined && value !== undefined && property !== 'length') {
+      let item = applyPrevious;
+
+      if (changePath !== applyPath) {
+        changePath = changePath.slice(applyPath.length);
+
+        changePath.forEach(key => {
+          item[key] = shallowClone(item[key]);
+          item = item[key];
+        });
+      }
+
+      item[property] = previous;
+    }
+
     changed = true;
   };
 
@@ -69,7 +87,7 @@ const observe = (object, callback, options = {}) => {
       const previous = Reflect.get(target, property, receiver);
       const isChanged = !(property in target) || !equals(previous, value);
       let result = true;
-      if (descriptor.set) {
+      if (descriptor && descriptor.set) {
         descriptor.set.call(receiver, value);
       } else if (isChanged) {
         result = Reflect.set(target[ProxyTarget] || target, property, value);
@@ -107,19 +125,19 @@ const observe = (object, callback, options = {}) => {
       }
       if (!inApply) {
         inApply = true;
-        let previous = undefined;
         if (compare) {
-          previous = new thisArg.constructor(thisArg.valueOf());
+          applyPrevious = new thisArg.constructor(thisArg.valueOf());
         }
         if (Array.isArray(thisArg) || toString.call(thisArg) === '[object Object]') {
-          previous = shallowClone(thisArg[ProxyTarget]);
+          applyPrevious = shallowClone(thisArg[ProxyTarget]);
         }
-        const applyPath = pathCache.get(target).slice(0, -1);
+        applyPath = pathCache.get(target).slice(0, -1);
         const result = Reflect.apply(target, thisArg, argumentsList);
         inApply = false;
-        if (changed || (compare && !equals(previous.valueOf(), thisArg.valueOf()))) {
+        if (changed || (compare && !equals(applyPrevious.valueOf(), thisArg.valueOf()))) {
           changed = false;
-          handleChange(applyPath, '', previous, thisArg[ProxyTarget] || thisArg);
+          handleChange(applyPath, '', applyPrevious, thisArg[ProxyTarget] || thisArg);
+          applyPrevious = undefined;
         }
         return result;
       }
@@ -132,4 +150,6 @@ const observe = (object, callback, options = {}) => {
   return proxy;
 };
 
-module.exports = { observe };
+const observed = proxy => proxy[ProxyTarget] || proxy;
+
+module.exports = { observe, observed };
