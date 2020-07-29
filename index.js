@@ -1,10 +1,12 @@
 const { shallowClone } = require('./lib/helper');
-const { ProxyTarget } = require('./lib/constants');
+const { PROXYTARGET, UNOBSERVE } = require('./lib/constants');
 
 const observe = (object, callback, options = {}) => {
   const equals = options.equals || Object.is;
   const pathCache = new WeakMap();
   const proxyCache = new WeakMap();
+
+  let unobserved = false;
 
   let inApply = false;
   let changed = false;
@@ -26,6 +28,8 @@ const observe = (object, callback, options = {}) => {
   };
 
   const handleChange = (changePath, property, previous, value) => {
+    if (unobserved) return;
+
     if (!inApply) {
       callback(property ? changePath.concat([property]) : changePath, previous, value);
       return;
@@ -50,6 +54,9 @@ const observe = (object, callback, options = {}) => {
   };
 
   const buildProxy = (value, path) => {
+    if (unobserved) {
+      return value;
+    }
     pathCache.set(value, path);
     let proxy = proxyCache.get(value);
     if (proxy === undefined) {
@@ -59,10 +66,26 @@ const observe = (object, callback, options = {}) => {
     return proxy;
   };
 
+  const unobserve = target => {
+    unobserved = true;
+    pathCache = null;
+    proxyCache = null;
+
+    return target;
+  };
+
   const handler = {
     get: (target, property, receiver) => {
-      if (property === ProxyTarget) {
+      if (property === PROXYTARGET) {
         return target;
+      }
+      if (
+        property === UNOBSERVE &&
+        pathCache !== null &&
+        pathCache.get(target) !== undefined &&
+        pathCache.get(target).length === 0
+      ) {
+        return unobserve(target);
       }
       const value = Reflect.get(target, property, receiver);
       if (isPrimitive(value) || isBuiltinWithoutMutableMethods(value) || property === 'constructor') {
@@ -150,6 +173,7 @@ const observe = (object, callback, options = {}) => {
   return proxy;
 };
 
-const observed = proxy => proxy[ProxyTarget] || proxy;
+const observed = proxy => proxy[PROXYTARGET] || proxy;
+const unobserve = proxy => proxy[UNOBSERVE] || proxy;
 
-module.exports = { observe, observed };
+module.exports = { observe, observed, unobserve };
