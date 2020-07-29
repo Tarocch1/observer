@@ -118,8 +118,8 @@ const observe = (object, callback, options = {}) => {
       return buildProxy(value, pathCache.get(target).concat([property]));
     },
     set: (target, property, value, receiver) => {
-      if (value && value[ProxyTarget] !== undefined) {
-        value = value[ProxyTarget];
+      if (value && value[PROXYTARGET] !== undefined) {
+        value = value[PROXYTARGET];
       }
       const descriptor = Reflect.getOwnPropertyDescriptor(target, property);
       const previous = Reflect.get(target, property, receiver);
@@ -128,7 +128,7 @@ const observe = (object, callback, options = {}) => {
       if (descriptor && descriptor.set) {
         descriptor.set.call(receiver, value);
       } else if (isChanged) {
-        result = Reflect.set(target[ProxyTarget] || target, property, value);
+        result = Reflect.set(target[PROXYTARGET] || target, property, value);
         if (result && !ignoreProperty(property)) {
           handleChange(pathCache.get(target), property, previous, value);
         }
@@ -159,7 +159,7 @@ const observe = (object, callback, options = {}) => {
     apply: (target, thisArg, argumentsList) => {
       const compare = isBuiltinWithMutableMethods(thisArg);
       if (compare) {
-        thisArg = thisArg[ProxyTarget];
+        thisArg = thisArg[PROXYTARGET];
       }
       if (!inApply) {
         inApply = true;
@@ -167,14 +167,14 @@ const observe = (object, callback, options = {}) => {
           applyPrevious = new thisArg.constructor(thisArg.valueOf());
         }
         if (Array.isArray(thisArg) || toString.call(thisArg) === '[object Object]') {
-          applyPrevious = shallowClone(thisArg[ProxyTarget]);
+          applyPrevious = shallowClone(thisArg[PROXYTARGET]);
         }
         applyPath = pathCache.get(target).slice(0, -1);
         const result = Reflect.apply(target, thisArg, argumentsList);
         inApply = false;
         if (changed || (compare && !equals(applyPrevious.valueOf(), thisArg.valueOf()))) {
           changed = false;
-          handleChange(applyPath, '', applyPrevious, thisArg[ProxyTarget] || thisArg);
+          handleChange(applyPath, '', applyPrevious, thisArg[PROXYTARGET] || thisArg);
           applyPrevious = undefined;
         }
         return result;
