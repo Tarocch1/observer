@@ -817,3 +817,45 @@ test('should NOT trigger if deleting a property fails', () => {
     verify(0);
   });
 });
+
+// https://github.com/sindresorhus/on-change/issues/50
+test('the callback should provide correct path when changes in setter', () => {
+  const object = {
+    _something: 'hello world',
+
+    get something() {
+      return this._something;
+    },
+    set something(val) {
+      this._something = val;
+    },
+  };
+
+  testHelper(object, {}, (proxy, verify) => {
+    proxy.something = 'goodbye world';
+
+    verify(1, proxy, ['_something'], 'hello world', 'goodbye world');
+  });
+});
+
+// https://github.com/sindresorhus/on-change/issues/60
+test('infinite loops should be avoided when call function in callback', () => {
+  const object = {
+    arr: [],
+    foo: true,
+  };
+
+  const proxy = observe(
+    object,
+    function (path, previous, value) {
+      this.arr.map(item => {});
+
+      expect(path).toEqual(['arr']);
+      expect(previous).toEqual([]);
+      expect(value).toEqual(['value']);
+    },
+    {},
+  );
+
+  proxy.arr.unshift('value');
+});
