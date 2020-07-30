@@ -8,5 +8,11 @@
   "repository": "github:Tarocch1/observer",
   "bugs": "https://github.com/Tarocch1/observer/issues",
   "main": "index.js",
-  "types": "index.d.ts"
+  "types": "index.d.ts",
+  "scripts": {
+    "test": "jest"
+  },
+  "devDependencies": {
+    "jest": "^26.1.0"
+  }
 }

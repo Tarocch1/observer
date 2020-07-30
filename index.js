@@ -1,10 +1,11 @@
 const { shallowClone } = require('./lib/helper');
-const { PROXYTARGET, UNOBSERVE } = require('./lib/constants');
+const { TARGET, UNOBSERVE } = require('./lib/constants');
 
 const observe = (object, callback, options = {}) => {
+  const PROXYTARGET = Symbol('PROXYTARGET');
   const equals = options.equals || Object.is;
-  const pathCache = new WeakMap();
-  const proxyCache = new WeakMap();
+  let pathCache = new WeakMap();
+  let proxyCache = new WeakMap();
 
   let unobserved = false;
 
@@ -77,7 +78,7 @@ const observe = (object, callback, options = {}) => {
   const ignoreProperty = property => {
     return (
       unobserved ||
-      (options.ignoreSymbols === true && isSymbol(property)) ||
+      (options.ignoreSymbols === true && typeof property === 'symbol') ||
       (options.ignoreUnderscores === true && property.charAt(0) === '_') ||
       (options.ignoreKeys !== undefined && options.ignoreKeys.includes(property))
     );
@@ -85,7 +86,7 @@ const observe = (object, callback, options = {}) => {
 
   const handler = {
     get: (target, property, receiver) => {
-      if (property === PROXYTARGET) {
+      if (property === PROXYTARGET || property === TARGET) {
         return target;
       }
       if (
@@ -188,7 +189,7 @@ const observe = (object, callback, options = {}) => {
   return proxy;
 };
 
-const observed = proxy => proxy[PROXYTARGET] || proxy;
+const observed = proxy => proxy[TARGET] || proxy;
 const unobserve = proxy => proxy[UNOBSERVE] || proxy;
 
 module.exports = { observe, observed, unobserve };
