@@ -4,6 +4,7 @@ const { TARGET, UNOBSERVE } = require('./lib/constants');
 const observe = (object, callback, options = {}) => {
   const PROXYTARGET = Symbol('PROXYTARGET');
   const equals = options.equals || Object.is;
+
   let pathCache = new WeakMap();
   let proxyCache = new WeakMap();
 
@@ -58,12 +59,16 @@ const observe = (object, callback, options = {}) => {
     if (unobserved) {
       return value;
     }
+
     pathCache.set(value, path);
+
     let proxy = proxyCache.get(value);
+
     if (proxy === undefined) {
       proxy = new Proxy(value, handler);
       proxyCache.set(value, proxy);
     }
+
     return proxy;
   };
 
@@ -89,6 +94,7 @@ const observe = (object, callback, options = {}) => {
       if (property === PROXYTARGET || property === TARGET) {
         return target;
       }
+
       if (
         property === UNOBSERVE &&
         pathCache !== null &&
@@ -97,7 +103,9 @@ const observe = (object, callback, options = {}) => {
       ) {
         return unobserve(target);
       }
+
       const value = Reflect.get(target, property, receiver);
+
       if (
         isPrimitive(value) ||
         isBuiltinWithoutMutableMethods(value) ||
@@ -107,6 +115,7 @@ const observe = (object, callback, options = {}) => {
       ) {
         return value;
       }
+
       const descriptor = Reflect.getOwnPropertyDescriptor(target, property);
       if (descriptor && !descriptor.configurable) {
         if (descriptor.set && !descriptor.get) {
@@ -116,76 +125,103 @@ const observe = (object, callback, options = {}) => {
           return value;
         }
       }
+
       return buildProxy(value, pathCache.get(target).concat([property]));
     },
+
     set: (target, property, value, receiver) => {
       if (value && value[PROXYTARGET] !== undefined) {
         value = value[PROXYTARGET];
       }
+
       const descriptor = Reflect.getOwnPropertyDescriptor(target, property);
       const previous = Reflect.get(target, property, receiver);
       const isChanged = !(property in target) || !equals(previous, value);
       let result = true;
+
       if (descriptor && descriptor.set) {
         descriptor.set.call(receiver, value);
       } else if (isChanged) {
         result = Reflect.set(target[PROXYTARGET] || target, property, value);
+
         if (result && !ignoreProperty(property)) {
           handleChange(pathCache.get(target), property, previous, value);
         }
       }
+
       return result;
     },
+
     defineProperty: (target, property, descriptor) => {
       let result = true;
+
       if (!isSameDescriptor(descriptor, Reflect.getOwnPropertyDescriptor(target, property))) {
         result = Reflect.defineProperty(target, property, descriptor);
+
         if (result && !ignoreProperty(property)) {
           handleChange(pathCache.get(target), property, undefined, descriptor.value);
         }
       }
+
       return result;
     },
+
     deleteProperty: (target, property) => {
       if (!Reflect.has(target, property)) {
         return true;
       }
+
       const previous = Reflect.get(target, property);
       const result = Reflect.deleteProperty(target, property);
+
       if (result && !ignoreProperty(property)) {
         handleChange(pathCache.get(target), property, previous, undefined);
       }
+
       return result;
     },
+
     apply: (target, thisArg, argumentsList) => {
       const compare = isBuiltinWithMutableMethods(thisArg);
+
       if (compare) {
         thisArg = thisArg[PROXYTARGET];
       }
+
       if (!inApply) {
         inApply = true;
+
         if (compare) {
           applyPrevious = new thisArg.constructor(thisArg.valueOf());
         }
+
         if (Array.isArray(thisArg) || toString.call(thisArg) === '[object Object]') {
           applyPrevious = shallowClone(thisArg[PROXYTARGET]);
         }
+
         applyPath = pathCache.get(target).slice(0, -1);
+
         const result = Reflect.apply(target, thisArg, argumentsList);
+
         inApply = false;
+
         if (changed || (compare && !equals(applyPrevious.valueOf(), thisArg.valueOf()))) {
           changed = false;
           handleChange(applyPath, '', applyPrevious, thisArg[PROXYTARGET] || thisArg);
           applyPrevious = undefined;
         }
+
         return result;
       }
+
       return Reflect.apply(target, thisArg, argumentsList);
     },
   };
 
   const proxy = buildProxy(object, []);
+
   callback = callback.bind(proxy);
+
   return proxy;
 };
 
