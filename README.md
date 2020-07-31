@@ -7,7 +7,6 @@
 [![GitHub](https://img.shields.io/github/license/tarocch1/observer)](https://github.com/Tarocch1/observer/blob/master/LICENSE)
 ![Test Workflow](https://github.com/Tarocch1/observer/workflows/Test%20Workflow/badge.svg)
 
-
 ## Install
 
 ```bash
@@ -15,6 +14,51 @@ npm install @tarocch1/observer
 ```
 
 ## Usage
+
+### Browser
+
+```html
+<script src="https://cdn.jsdelivr.net/npm/@tarocch1/observer/dist/index.umd.js"></script>
+<script>
+  const object = {
+    foo: false,
+    a: {
+      b: [
+        {
+          c: false,
+        },
+      ],
+    },
+  };
+
+  let i = 0;
+  const observedObject = Observer.observe(object, function (path, previousValue, value) {
+    console.log('Object changed:', ++i);
+    console.log('this:', this);
+    console.log('path:', path);
+    console.log('previousValue:', previousValue);
+    console.log('value:', value);
+  });
+
+  observedObject.foo = true;
+  //=> 'Object changed: 1'
+  //=> 'this: {
+  //     foo: true,
+  //     a: {
+  //       b: [
+  //         {
+  //           c: false
+  //         }
+  //       ]
+  //     }
+  //   }'
+  //=> 'path: ["foo"]'
+  //=> 'previousValue: false'
+  //=> 'value: true'
+</script>
+```
+
+### Node.js
 
 ```js
 const { observe, observed, unobserve } = require('@tarocch1/observer');
@@ -80,6 +124,8 @@ unobserve(observedObject);
 observedObject.foo = 'bar';
 // Callback isn't called
 ```
+
+[![Edit Observer](https://codesandbox.io/static/img/play-codesandbox.svg)](https://codesandbox.io/s/observer-do87b?fontsize=14&hidenavigation=1&theme=dark)
 
 ## API
 
