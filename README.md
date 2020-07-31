@@ -2,7 +2,11 @@
 
 一个 Javascript 对象与数组观察器。基于 [Proxy](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Proxy) API。
 
+[![npm](https://img.shields.io/npm/v/@tarocch1/observer)](https://www.npmjs.com/package/@tarocch1/observer)
+[![npm bundle size](https://img.shields.io/bundlephobia/min/@tarocch1/observer)](https://bundlephobia.com/result?p=@tarocch1/observer)
 [![GitHub](https://img.shields.io/github/license/tarocch1/observer)](https://github.com/Tarocch1/observer/blob/master/LICENSE)
+![Test Workflow](https://github.com/Tarocch1/observer/workflows/Test%20Workflow/badge.svg)
+
 
 ## Install
 
