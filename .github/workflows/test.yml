@@ -24,3 +24,6 @@ jobs:
       - id: npm_test
         name: Test
         run: npm test
+      - id: npm_build
+        name: Build
+        run: npm run build

@@ -2,17 +2,32 @@
   "name": "@tarocch1/observer",
   "version": "0.0.1",
   "description": "An observer for object and array.",
+  "keywords": [
+    "observer",
+    "watcher",
+    "proxy",
+    "object",
+    "array",
+    "changes",
+    "event",
+    "listener"
+  ],
   "license": "MIT",
   "author": "Tarocch1 <huiben.fang@gmail.com> (https://github.com/Tarocch1)",
   "homepage": "https://github.com/Tarocch1/observer",
   "repository": "github:Tarocch1/observer",
   "bugs": "https://github.com/Tarocch1/observer/issues",
-  "main": "index.js",
+  "main": "dist/index.cjs.js",
+  "module": "dist/index.esm.js",
+  "umd:main": "dist/index.umd.js",
   "types": "index.d.ts",
   "scripts": {
+    "build": "rollup -c",
     "test": "jest"
   },
   "devDependencies": {
-    "jest": "^26.1.0"
+    "@rollup/plugin-commonjs": "^14.0.0",
+    "jest": "^26.1.0",
+    "rollup": "^2.23.0"
   }
 }
