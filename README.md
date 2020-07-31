@@ -172,6 +172,7 @@ Type: `object`
 ##### isShallow
 
 Type: `boolean`
+
 Default: `false`
 
 设置为 `true` 后，深层变化不会触发回调。
@@ -179,6 +180,7 @@ Default: `false`
 ##### equals
 
 Type: `Function`
+
 Default: [`Object.is`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/is)
 
 用于判断值是否发生变化的函数，接受两个值，如果两个值不等，返回 `true`。
@@ -186,6 +188,7 @@ Default: [`Object.is`](https://developer.mozilla.org/en-US/docs/Web/JavaScript/R
 ##### ignoreSymbols
 
 Type: `boolean`
+
 Default: `false`
 
 设置为 `true` 后，属性名为 `Symbol` 的值发生变化不会触发回调。
@@ -193,6 +196,7 @@ Default: `false`
 ##### ignoreUnderscores
 
 Type: `boolean`
+
 Default: `false`
 
 设置为 `true` 后，属性名以下划线开头的值发生变化不会触发回调。
@@ -200,6 +204,7 @@ Default: `false`
 ##### ignoreKeys
 
 Type: `Array<string | symbol>`
+
 Default: `[]`
 
 属性名存在于该配置中的值发生变化时不会触发回调。
