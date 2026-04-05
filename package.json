@@ -27,7 +27,7 @@
   },
   "devDependencies": {
     "@rollup/plugin-commonjs": "^14.0.0",
-    "jest": "^26.1.0",
+    "jest": "^30.3.0",
     "rollup": "^2.23.0"
   }
 }
